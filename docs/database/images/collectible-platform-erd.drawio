@@ -1,0 +1,102 @@
+
+                    ---------------------
+                    title
+                    ---------------------
+                    guid (PK)
+		    title
+		    title_type (Movie | TV)
+		    release_year
+                    genre
+                    sub_genre
+		    seasons (nullable)
+		    episodes (nullable)
+		    created_date
+		    modified_date
+
+                    ---------------------
+                    media_item
+                    ---------------------
+                    guid (PK)
+                    title_guid (FK)
+                    collection_guid (FK)
+		    media_type (dvd, dvd10, vhs, blueray, ultrahd4k)
+		    edition
+		    distribution_year
+		    media_item_image_url_front
+		    media_item_image_url_back
+		    distributor
+		    upc
+		    created_date
+		    modified_date
+                    purchase_date
+                    purchase_price	
+		    grade_text	
+		    grade_rubric
+		    grading_company
+		    graded_date
+		    condition (sealed, complete, used)
+
+                    ---------------------
+                    collection
+                    ---------------------
+                    guid (PK)
+		    volume
+		    edition
+		    theme
+                    serial_number
+                    nfc_token
+		    created_date
+		    modified_date
+		    collection_nft_image_url
+		    cover_nft_image_url_front
+		    cover_nft_image_url_back
+		    cover_nft_image_url_spine
+
+                    ---------------------
+                    listing
+                    ---------------------
+                    guid (PK)
+                    collection_guid (FK)
+		    list_date
+		    sale_date
+		    sale_price
+		    list_price
+		    listing_url
+		    marketplace
+		    listing_id
+		    status (listed, unlisted)
+		    created_date
+		    modified_date
+
+                    ---------------------
+                    authentication_log
+                    ---------------------
+		    guid
+		    collection_guid
+		    scan_time
+		    result
+		    worker_version
+		    ip_country
+		    ip_address
+		    device
+		    browser
+		    referrer
+		    response_time_ms
+
+                    ---------------------
+                    audit_log
+                    ---------------------
+		    guid
+		    table_name
+		    record_guid
+		    action
+		    old_value
+		    new_value
+		    user_guid
+		    created_date
+		    deleted_date
+		    modified_date
+
+
+
+

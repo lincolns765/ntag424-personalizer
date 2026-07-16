@@ -8,11 +8,13 @@ class IngestionService:
     """
     Coordinates the media ingestion pipeline.
 
-    Responsibilities
+    Pipeline
 
-    • Scan folder
-    • Pair images
-    • Return summary statistics
+        Scan Folder
+            ↓
+        Pair Images
+            ↓
+        Return image pairs
 
     No GUI code belongs here.
     """
@@ -22,14 +24,14 @@ class IngestionService:
         self.images = []
         self.pairs = []
 
-    #####################################################################
+    ##################################################################
 
     def scan(self, folder):
 
         folder = Path(folder)
 
         #
-        # Scan images
+        # Scan folder
         #
 
         self.images = scan_folder(folder)
@@ -45,16 +47,40 @@ class IngestionService:
         #
 
         return {
+
             "images": self.images,
+
             "pairs": self.pairs,
+
             "image_count": len(self.images),
+
             "pair_count": len(self.pairs),
-            "unpaired": len(self.images) % 2,
+
+            "unpaired": len(self.images) - (len(self.pairs) * 2),
+
         }
 
-    #####################################################################
+    ##################################################################
+
+    def get_pairs(self):
+
+        return self.pairs
+
+    ##################################################################
+
+    def image_count(self):
+
+        return len(self.images)
+
+    ##################################################################
+
+    def pair_count(self):
+
+        return len(self.pairs)
+
+    ##################################################################
 
     def clear(self):
 
-        self.images = []
-        self.pairs = []
+        self.images.clear()
+        self.pairs.clear()

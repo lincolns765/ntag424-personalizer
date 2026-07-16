@@ -1,30 +1,42 @@
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
-    QLabel,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
+from gui.dialogs.image_preview_dialog import ImagePreviewDialog
+from gui.services.thumbnail_service import ThumbnailService
+from gui.widgets.thumbnail_cell import ThumbnailCell
+
 
 class MediaTable(QWidget):
     """
     Main media review table.
 
-    This widget becomes the primary workspace of the application.
+    Displays every discovered image pair using
+    thumbnail widgets.
 
-    Every row represents one media item (front/back pair).
-
-    Future PRs will populate this table from the ingestion
-    pipeline and later directly from D1.
+    Double-clicking any row opens the original
+    front/back images in a preview dialog.
     """
+
+    ##################################################################
 
     def __init__(self):
         super().__init__()
+
+        self.thumbnail_service = ThumbnailService()
+
+        #
+        # Keep the original image paths so the
+        # preview dialog can display full-size images.
+        #
+
+        self.image_pairs = []
 
         self.build_ui()
 
@@ -35,10 +47,6 @@ class MediaTable(QWidget):
         layout = QVBoxLayout(self)
 
         self.table = QTableWidget()
-
-        ##############################################################
-        # Columns
-        ##############################################################
 
         columns = [
             "Front",
@@ -51,13 +59,7 @@ class MediaTable(QWidget):
         self.table.setColumnCount(len(columns))
         self.table.setHorizontalHeaderLabels(columns)
 
-        ##############################################################
-        # Appearance
-        ##############################################################
-
         self.table.setAlternatingRowColors(True)
-
-        self.table.setSortingEnabled(False)
 
         self.table.setSelectionBehavior(
             QAbstractItemView.SelectRows
@@ -68,24 +70,34 @@ class MediaTable(QWidget):
         )
 
         self.table.setEditTriggers(
-            QAbstractItemView.DoubleClicked
-            | QAbstractItemView.SelectedClicked
+            QAbstractItemView.NoEditTriggers
         )
 
         self.table.verticalHeader().setVisible(False)
 
+        self.table.verticalHeader().setDefaultSectionSize(185)
+
         header = self.table.horizontalHeader()
 
-        header.setStretchLastSection(True)
+        header.setStretchLastSection(False)
 
         header.setSectionResizeMode(
-            QHeaderView.ResizeToContents
+            QHeaderView.Interactive
         )
 
-        self.table.setColumnWidth(0, 150)
-        self.table.setColumnWidth(1, 150)
-        self.table.setColumnWidth(2, 140)
+        self.table.setColumnWidth(0, 190)
+        self.table.setColumnWidth(1, 190)
+        self.table.setColumnWidth(2, 150)
         self.table.setColumnWidth(3, 260)
+        self.table.setColumnWidth(4, 120)
+
+        #
+        # Double-click preview
+        #
+
+        self.table.cellDoubleClicked.connect(
+            self.open_preview
+        )
 
         layout.addWidget(self.table)
 
@@ -95,13 +107,14 @@ class MediaTable(QWidget):
 
         self.table.setRowCount(0)
 
+        self.image_pairs.clear()
+
     ##################################################################
 
     def add_pair(
         self,
-        pair_number,
-        front_name,
-        back_name,
+        front_path,
+        back_path,
         storage_case,
         guid="",
         status="Pending",
@@ -112,23 +125,51 @@ class MediaTable(QWidget):
         self.table.insertRow(row)
 
         #
-        # Front
+        # Save original image paths
         #
 
-        self.table.setItem(
-            row,
-            0,
-            QTableWidgetItem(front_name),
+        self.image_pairs.append(
+            (
+                front_path,
+                back_path,
+            )
         )
 
         #
-        # Back
+        # Create or retrieve cached thumbnails
         #
 
-        self.table.setItem(
+        front_thumb, back_thumb = (
+            self.thumbnail_service.ensure_pair(
+                front_path,
+                back_path,
+            )
+        )
+
+        #
+        # Front thumbnail
+        #
+
+        self.table.setCellWidget(
+            row,
+            0,
+            ThumbnailCell(
+                front_thumb,
+                front_path.name,
+            ),
+        )
+
+        #
+        # Back thumbnail
+        #
+
+        self.table.setCellWidget(
             row,
             1,
-            QTableWidgetItem(back_name),
+            ThumbnailCell(
+                back_thumb,
+                back_path.name,
+            ),
         )
 
         #
@@ -188,27 +229,40 @@ class MediaTable(QWidget):
         pairs,
         storage_case,
     ):
-        """
-        Populate the table from the image pair list.
-
-        pairs
-
-        [
-            (front_path, back_path),
-            ...
-        ]
-        """
 
         self.clear()
 
-        for i, pair in enumerate(
-            pairs,
-            start=1,
-        ):
+        for front, back in pairs:
 
             self.add_pair(
-                pair_number=i,
-                front_name=pair[0].name,
-                back_name=pair[1].name,
+                front_path=front,
+                back_path=back,
                 storage_case=storage_case,
+                guid="",
+                status="Pending",
             )
+
+    ##################################################################
+
+    def open_preview(
+        self,
+        row,
+        column,
+    ):
+        """
+        Open the original images for the selected row.
+        """
+
+        if row >= len(self.image_pairs):
+
+            return
+
+        front_path, back_path = self.image_pairs[row]
+
+        dialog = ImagePreviewDialog(
+            front_path,
+            back_path,
+            self,
+        )
+
+        dialog.exec()

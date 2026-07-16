@@ -1,0 +1,26 @@
+name = "collectible-platform"
+
+main = "workers/auth-worker/src/index.js"
+
+compatibility_date = "2026-07-09"
+
+[env.dev]
+name = "collectible-platform-dev"
+
+[[env.dev.d1_databases]]
+binding = "DB"
+database_name = "collectible-platform-dev"
+database_id = "2f3d888a-4493-4cdb-bb69-b0dd048ae2dc"
+
+[[env.dev.kv_namespaces]]
+binding = "CACHE"
+id = "28e50cd1bd0b4735829b50fec5944677"
+
+[[env.dev.kv_namespaces]]
+binding = "CONFIG"
+id = "0be9b56c400e4d9d84e51a78effb8195"
+
+[[env.dev.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "collectible-platform-images-dev"
+preview_bucket_name = "collectible-platform-images-dev"
